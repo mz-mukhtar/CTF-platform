@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { User } from '@/contexts/AuthContext'
 
 interface LeaderboardEntry {
@@ -35,8 +34,9 @@ export default function ScoreboardPage() {
           return b.challengesSolved - a.challengesSolved
         })
 
-        // Create leaderboard entries with ranks
-        const entries: LeaderboardEntry[] = sortedUsers.map((user, index) => ({
+        // Filter out users with 0 points and create leaderboard entries with ranks
+        const usersWithPoints = sortedUsers.filter((user) => user.totalPoints > 0)
+        const entries: LeaderboardEntry[] = usersWithPoints.map((user, index) => ({
           rank: index + 1,
           username: user.name,
           points: user.totalPoints,
@@ -73,25 +73,9 @@ export default function ScoreboardPage() {
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Scoreboard</h1>
-              <p className="text-gray-300">Global ranking of all players</p>
-            </div>
-            <div className="flex gap-4">
-              <Link
-                href="/dashboard"
-                className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/"
-                className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Home
-              </Link>
-            </div>
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-white mb-2">Scoreboard</h1>
+            <p className="text-gray-300">Global ranking of all players</p>
           </div>
 
           {/* Leaderboard Table */}

@@ -65,22 +65,21 @@ if ($method === 'GET' && $action === 'scoreboard') {
         sendResponse(['leaderboard' => []]);
     }
     
-    // Get users who solved challenges from this event
+    // Get all users with their event-specific scores (including 0 points)
     $stmt = $pdo->prepare("
         SELECT 
             u.id,
             u.name,
             u.email,
-            COALESCE(SUM(c.points), 0) as total_points,
-            COUNT(DISTINCT sf.challenge_id) as challenges_solved
+            COALESCE(SUM(CASE WHEN c.event_id = ? THEN c.points ELSE 0 END), 0) as total_points,
+            COUNT(DISTINCT CASE WHEN c.event_id = ? AND sf.is_correct = 1 THEN sf.challenge_id ELSE NULL END) as challenges_solved
         FROM users u
-        LEFT JOIN submitted_flags sf ON u.id = sf.user_id AND sf.is_correct = 1
-        LEFT JOIN challenges c ON sf.challenge_id = c.id AND c.event_id = ?
+        LEFT JOIN submitted_flags sf ON u.id = sf.user_id
+        LEFT JOIN challenges c ON sf.challenge_id = c.id
         GROUP BY u.id, u.name, u.email
-        HAVING challenges_solved > 0 OR total_points > 0
         ORDER BY total_points DESC, challenges_solved DESC
     ");
-    $stmt->execute([$id]);
+    $stmt->execute([$id, $id]);
     $users = $stmt->fetchAll();
     
     $leaderboard = [];

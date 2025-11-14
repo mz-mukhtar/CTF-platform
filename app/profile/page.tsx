@@ -372,24 +372,6 @@ function ProfileContent() {
               )}
             </div>
 
-            {/* Stats Section */}
-            <div className="pt-6 border-t border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-4">Statistics</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-gray-400 text-sm mb-2">Total Points</label>
-                  <div className="bg-gray-700 rounded-lg px-4 py-3 text-white text-lg font-semibold text-primary-400">
-                    {user?.totalPoints || 0}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-gray-400 text-sm mb-2">Challenges Solved</label>
-                  <div className="bg-gray-700 rounded-lg px-4 py-3 text-white text-lg font-semibold text-primary-400">
-                    {user?.challengesSolved || 0}
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

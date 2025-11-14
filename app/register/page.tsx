@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { checkPasswordStrength, generateStrongPassword } from '@/utils/passwordStrength'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
@@ -12,8 +13,24 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [passwordStrength, setPasswordStrength] = useState<ReturnType<typeof checkPasswordStrength> | null>(null)
+  const [showSuggestedPassword, setShowSuggestedPassword] = useState(false)
+  const [suggestedPassword, setSuggestedPassword] = useState('')
   const { register } = useAuth()
   const router = useRouter()
+
+  const handleGeneratePassword = () => {
+    const generated = generateStrongPassword()
+    setSuggestedPassword(generated)
+    setShowSuggestedPassword(true)
+  }
+
+  const useSuggestedPassword = () => {
+    setPassword(suggestedPassword)
+    setConfirmPassword(suggestedPassword)
+    setPasswordStrength(checkPasswordStrength(suggestedPassword))
+    setShowSuggestedPassword(false)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,8 +47,12 @@ export default function RegisterPage() {
       return
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters')
+    // Check password strength
+    const strength = checkPasswordStrength(password)
+    setPasswordStrength(strength)
+
+    if (!strength.isStrong) {
+      setError('Password does not meet strength requirements. Please see suggestions below.')
       return
     }
 
@@ -91,19 +112,95 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-gray-300 mb-2">
-              Password
-            </label>
+            <div className="flex justify-between items-center mb-2">
+              <label htmlFor="password" className="block text-gray-300">
+                Password
+              </label>
+              <button
+                type="button"
+                onClick={handleGeneratePassword}
+                className="text-primary-400 hover:text-primary-300 text-xs"
+              >
+                Generate Strong Password
+              </button>
+            </div>
             <input
               type="password"
               id="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                setError('')
+                if (e.target.value) {
+                  setPasswordStrength(checkPasswordStrength(e.target.value))
+                } else {
+                  setPasswordStrength(null)
+                }
+              }}
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="Enter your password"
               required
-              minLength={6}
             />
+            {showSuggestedPassword && (
+              <div className="mt-2 p-3 bg-gray-700 rounded-lg border border-primary-500/50">
+                <p className="text-gray-300 text-sm mb-2">Suggested password:</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 bg-gray-800 px-3 py-2 rounded text-primary-400 text-sm">
+                    {suggestedPassword}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={useSuggestedPassword}
+                    className="bg-primary-500 hover:bg-primary-600 text-white px-3 py-2 rounded text-sm transition-colors"
+                  >
+                    Use
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowSuggestedPassword(false)}
+                    className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded text-sm transition-colors"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            )}
+            {passwordStrength && (
+              <div className="mt-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="flex-1 bg-gray-700 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all ${
+                        passwordStrength.score <= 1
+                          ? 'bg-red-500'
+                          : passwordStrength.score === 2
+                          ? 'bg-yellow-500'
+                          : passwordStrength.score === 3
+                          ? 'bg-blue-500'
+                          : 'bg-green-500'
+                      }`}
+                      style={{ width: `${(passwordStrength.score / 4) * 100}%` }}
+                    />
+                  </div>
+                  <span
+                    className={`text-xs font-semibold ${
+                      passwordStrength.isStrong
+                        ? 'text-green-400'
+                        : 'text-red-400'
+                    }`}
+                  >
+                    {passwordStrength.isStrong ? 'Strong' : 'Weak'}
+                  </span>
+                </div>
+                {!passwordStrength.isStrong && (
+                  <ul className="text-xs text-gray-400 mt-1 space-y-1">
+                    {passwordStrength.feedback.map((msg, idx) => (
+                      <li key={idx}>• {msg}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
@@ -118,13 +215,15 @@ export default function RegisterPage() {
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="Confirm your password"
               required
-              minLength={6}
             />
+            {confirmPassword && password !== confirmPassword && (
+              <p className="text-red-400 text-sm mt-1">Passwords do not match</p>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !passwordStrength?.isStrong || password !== confirmPassword}
             className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Registering...' : 'Register'}
@@ -152,4 +251,3 @@ export default function RegisterPage() {
     </main>
   )
 }
-

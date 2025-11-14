@@ -68,6 +68,7 @@ export default function EventScoreboardPage({ params }: { params: { id: string }
       }
 
       const users = JSON.parse(usersJson)
+      // For event scoreboard, show all users (even with 0 points)
       const sortedUsers = [...users].sort((a, b) => {
         if (b.totalPoints !== a.totalPoints) {
           return b.totalPoints - a.totalPoints
