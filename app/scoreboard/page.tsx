@@ -70,38 +70,39 @@ export default function ScoreboardPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2">Scoreboard</h1>
-            <p className="text-gray-300">Global ranking of all players</p>
+          <div className="mb-6 md:mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Scoreboard</h1>
+            <p className="text-gray-300 text-sm md:text-base">Global ranking of all players</p>
           </div>
 
           {/* Leaderboard Table */}
           <div className="bg-gray-800/50 rounded-lg border border-gray-700 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-700/50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Rank
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Username
-                    </th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold text-gray-300">
-                      Points
-                    </th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold text-gray-300">
-                      Solved
-                    </th>
-                  </tr>
-                </thead>
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <div className="inline-block min-w-full align-middle">
+                <table className="w-full min-w-[640px]">
+                  <thead className="bg-gray-700/50">
+                    <tr>
+                      <th className="px-3 sm:px-6 py-3 md:py-4 text-left text-xs sm:text-sm font-semibold text-gray-300">
+                        Rank
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 md:py-4 text-left text-xs sm:text-sm font-semibold text-gray-300">
+                        Username
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 md:py-4 text-right text-xs sm:text-sm font-semibold text-gray-300">
+                        Points
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 md:py-4 text-right text-xs sm:text-sm font-semibold text-gray-300">
+                        Solved
+                      </th>
+                    </tr>
+                  </thead>
                 <tbody className="divide-y divide-gray-700">
                   {leaderboard.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-6 py-8 text-center text-gray-400">
+                      <td colSpan={4} className="px-4 sm:px-6 py-6 md:py-8 text-center text-gray-400 text-sm sm:text-base">
                         No players yet. Be the first to register and start solving challenges!
                       </td>
                     </tr>
@@ -122,13 +123,13 @@ export default function ScoreboardPage() {
                             isTopThree ? 'bg-gray-700/20' : ''
                           }`}
                         >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              {entry.rank === 1 && <span className="text-2xl">🥇</span>}
-                              {entry.rank === 2 && <span className="text-2xl">🥈</span>}
-                              {entry.rank === 3 && <span className="text-2xl">🥉</span>}
+                          <td className="px-3 sm:px-6 py-3 md:py-4">
+                            <div className="flex items-center gap-1 sm:gap-2">
+                              {entry.rank === 1 && <span className="text-xl sm:text-2xl">🥇</span>}
+                              {entry.rank === 2 && <span className="text-xl sm:text-2xl">🥈</span>}
+                              {entry.rank === 3 && <span className="text-xl sm:text-2xl">🥉</span>}
                               <span
-                                className={`font-bold ${
+                                className={`font-bold text-sm sm:text-base ${
                                   isTopThree
                                     ? rankColors[entry.rank as keyof typeof rankColors] ||
                                       'text-white'
@@ -139,16 +140,16 @@ export default function ScoreboardPage() {
                               </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="text-white font-medium">{entry.username}</span>
+                          <td className="px-3 sm:px-6 py-3 md:py-4">
+                            <span className="text-white font-medium text-sm sm:text-base">{entry.username}</span>
                           </td>
-                          <td className="px-6 py-4 text-right">
-                            <span className="text-primary-400 font-semibold">
+                          <td className="px-3 sm:px-6 py-3 md:py-4 text-right">
+                            <span className="text-primary-400 font-semibold text-sm sm:text-base">
                               {entry.points}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right">
-                            <span className="text-gray-300">{entry.solved}</span>
+                          <td className="px-3 sm:px-6 py-3 md:py-4 text-right">
+                            <span className="text-gray-300 text-sm sm:text-base">{entry.solved}</span>
                           </td>
                         </tr>
                       )

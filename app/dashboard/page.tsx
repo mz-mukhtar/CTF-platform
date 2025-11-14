@@ -220,50 +220,50 @@ function DashboardContent() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2">Dashboard</h1>
-            <p className="text-gray-300">
+          <div className="mb-6 md:mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Dashboard</h1>
+            <p className="text-gray-300 text-sm sm:text-base">
               Welcome back, <span className="text-primary-400 font-semibold">{user?.name}</span>!
             </p>
           </div>
 
           {/* Statistics Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-2">Total Points</h3>
-              <p className="text-3xl font-bold text-primary-400">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 md:mb-8">
+            <div className="bg-gray-800/50 rounded-lg p-4 sm:p-6 border border-gray-700">
+              <h3 className="text-sm sm:text-lg font-semibold text-white mb-2">Total Points</h3>
+              <p className="text-2xl sm:text-3xl font-bold text-primary-400">
                 {user?.totalPoints || 0}
               </p>
             </div>
 
-            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-2">Challenges Solved</h3>
-              <p className="text-3xl font-bold text-primary-400">
+            <div className="bg-gray-800/50 rounded-lg p-4 sm:p-6 border border-gray-700">
+              <h3 className="text-sm sm:text-lg font-semibold text-white mb-2">Challenges Solved</h3>
+              <p className="text-2xl sm:text-3xl font-bold text-primary-400">
                 {user?.challengesSolved || 0}
               </p>
             </div>
 
-            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-2">Your Rank</h3>
-              <p className="text-3xl font-bold text-primary-400">
+            <div className="bg-gray-800/50 rounded-lg p-4 sm:p-6 border border-gray-700">
+              <h3 className="text-sm sm:text-lg font-semibold text-white mb-2">Your Rank</h3>
+              <p className="text-2xl sm:text-3xl font-bold text-primary-400">
                 {userRank > 0 ? `#${userRank}` : 'N/A'}
               </p>
-              <p className="text-sm text-gray-400 mt-1">out of {totalUsers} players</p>
+              <p className="text-xs sm:text-sm text-gray-400 mt-1">out of {totalUsers} players</p>
             </div>
 
-            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-2">Overall Performance</h3>
-              <p className="text-2xl font-bold text-primary-400">{performance}%</p>
-              <p className="text-sm text-gray-400 mt-1">{performanceLabel}</p>
+            <div className="bg-gray-800/50 rounded-lg p-4 sm:p-6 border border-gray-700 col-span-2 lg:col-span-1">
+              <h3 className="text-sm sm:text-lg font-semibold text-white mb-2">Overall Performance</h3>
+              <p className="text-2xl sm:text-3xl font-bold text-primary-400">{performance}%</p>
+              <p className="text-xs sm:text-sm text-gray-400 mt-1">{performanceLabel}</p>
             </div>
           </div>
 
           {/* Overall Performance Details */}
-          <div className="bg-gray-800/50 rounded-lg p-8 border border-gray-700 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Overall Performance</h2>
+          <div className="bg-gray-800/50 rounded-lg p-6 md:p-8 border border-gray-700 mb-6 md:mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 md:mb-6">Overall Performance</h2>
 
             <div className="space-y-4">
               <div>
@@ -311,8 +311,8 @@ function DashboardContent() {
           </div>
 
           {/* Performance by Category */}
-          <div className="bg-gray-800/50 rounded-lg p-8 border border-gray-700 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Performance by Category</h2>
+          <div className="bg-gray-800/50 rounded-lg p-6 md:p-8 border border-gray-700 mb-6 md:mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 md:mb-6">Performance by Category</h2>
             <div className="space-y-6">
               {categoryPerformance.map((perf) => {
                 const categoryEmojis: { [key: string]: string } = {
@@ -355,8 +355,8 @@ function DashboardContent() {
           </div>
 
           {/* Performance by Difficulty */}
-          <div className="bg-gray-800/50 rounded-lg p-8 border border-gray-700 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Performance by Difficulty</h2>
+          <div className="bg-gray-800/50 rounded-lg p-6 md:p-8 border border-gray-700 mb-6 md:mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 md:mb-6">Performance by Difficulty</h2>
             <div className="space-y-6">
               {difficultyPerformance.map((perf) => {
                 const difficultyColors: { [key: string]: string } = {
@@ -410,8 +410,8 @@ function DashboardContent() {
           </div>
 
           {/* Solved Challenges Summary */}
-          <div className="bg-gray-800/50 rounded-lg p-8 border border-gray-700">
-            <h2 className="text-2xl font-bold text-white mb-6">Solved Challenges</h2>
+          <div className="bg-gray-800/50 rounded-lg p-6 md:p-8 border border-gray-700">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 md:mb-6">Solved Challenges</h2>
             {user?.challengesSolved === 0 ? (
               <p className="text-gray-400 text-center py-8">
                 You haven't solved any challenges yet. Start playing to see your progress here!
