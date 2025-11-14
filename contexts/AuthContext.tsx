@@ -50,7 +50,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Get all users from localStorage
+    // Try API first (for production with database)
+    try {
+      // Get CSRF token
+      const csrfResponse = await fetch('/api/csrf.php')
+      const csrfData = await csrfResponse.json()
+      
+      const response = await fetch('/api/auth.php?action=login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          csrf_token: csrfData.token,
+        }),
+      })
+      
+      const result = await response.json()
+      if (result.success) {
+        // Store user data
+        const userData = {
+          id: result.user.id.toString(),
+          name: result.user.name,
+          email: result.user.email,
+          password: password, // For localStorage fallback only
+          totalPoints: result.user.total_points || 0,
+          challengesSolved: result.user.challenges_solved || 0,
+          solvedChallenges: [],
+        }
+        setUser(userData)
+        localStorage.setItem('ctf_user', JSON.stringify(userData))
+        return true
+      }
+    } catch (apiError) {
+      // Fallback to localStorage for development
+      console.log('API not available, using localStorage fallback')
+    }
+
+    // Fallback: Get all users from localStorage
     const usersJson = localStorage.getItem('ctf_users')
     if (!usersJson) {
       return false
@@ -83,7 +122,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string
   ): Promise<boolean> => {
-    // Get existing users
+    // Try API first (for production with database)
+    try {
+      // Get CSRF token
+      const csrfResponse = await fetch('/api/csrf.php')
+      const csrfData = await csrfResponse.json()
+      
+      const response = await fetch('/api/auth.php?action=register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          csrf_token: csrfData.token,
+        }),
+      })
+      
+      const result = await response.json()
+      if (result.success) {
+        // Store user data
+        const newUser: User = {
+          id: result.user.id.toString(),
+          name: result.user.name,
+          email: result.user.email,
+          password: password, // For localStorage fallback only
+          totalPoints: result.user.totalPoints || 0,
+          challengesSolved: result.user.challengesSolved || 0,
+          solvedChallenges: [],
+        }
+        setUser(newUser)
+        localStorage.setItem('ctf_user', JSON.stringify(newUser))
+        return true
+      }
+      return false
+    } catch (apiError) {
+      // Fallback to localStorage for development
+      console.log('API not available, using localStorage fallback')
+    }
+
+    // Fallback: Get existing users
     const usersJson = localStorage.getItem('ctf_users')
     const users: User[] = usersJson ? JSON.parse(usersJson) : []
 
@@ -122,22 +202,86 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ): Promise<boolean> => {
     if (!user) return false
 
-    // Get the challenge flag from challenges data
-    // In production, this would be an API call
-    const challengesJson = localStorage.getItem('ctf_challenges')
-    if (!challengesJson) return false
-
     try {
+      // Hash the submitted flag
+      const encoder = new TextEncoder()
+      const data = encoder.encode(flag.trim())
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      const submittedFlagHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+
+      // Try API first (for production with database)
+      try {
+        // Get CSRF token
+        const csrfResponse = await fetch('/api/csrf.php')
+        const csrfData = await csrfResponse.json()
+        
+        const response = await fetch('/api/submit_flag.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            challenge_id: challengeId,
+            flag: flag.trim(),
+            user_id: user.id,
+            csrf_token: csrfData.token,
+          }),
+        })
+        
+        const result = await response.json()
+        if (result.correct) {
+          // Update user locally
+          const updatedUser: User = {
+            ...user,
+            totalPoints: user.totalPoints + points,
+            challengesSolved: user.challengesSolved + 1,
+            solvedChallenges: [...user.solvedChallenges, challengeId],
+          }
+          
+          // Update in localStorage
+          const usersJson = localStorage.getItem('ctf_users')
+          if (usersJson) {
+            const users: User[] = JSON.parse(usersJson)
+            const userIndex = users.findIndex((u) => u.id === user.id)
+            if (userIndex !== -1) {
+              users[userIndex] = updatedUser
+              localStorage.setItem('ctf_users', JSON.stringify(users))
+            }
+          }
+          
+          setUser(updatedUser)
+          localStorage.setItem('ctf_user', JSON.stringify(updatedUser))
+          return true
+        }
+        return false
+      } catch (apiError) {
+        // Fallback to localStorage for development
+        console.log('API not available, using localStorage fallback')
+      }
+
+      // Fallback: Check against localStorage (for development)
+      const challengesJson = localStorage.getItem('ctf_challenges')
+      if (!challengesJson) return false
+
       const challenges = JSON.parse(challengesJson)
       const challenge = challenges.find((c: any) => c.id === challengeId)
       
       if (!challenge) return false
       
-      // Normalize flag comparison (trim whitespace, case-insensitive)
-      const submittedFlag = flag.trim()
-      const correctFlag = challenge.flag.trim()
+      // Compare with stored hash (if available) or plaintext (for backward compatibility)
+      let isCorrect = false
+      if (challenge.flag_hash) {
+        // Compare hashes
+        isCorrect = challenge.flag_hash === submittedFlagHash
+      } else if (challenge.flag) {
+        // Backward compatibility: compare plaintext
+        isCorrect = challenge.flag.trim() === flag.trim()
+      } else {
+        return false
+      }
       
-      if (submittedFlag !== correctFlag) {
+      if (!isCorrect) {
         return false
       }
 

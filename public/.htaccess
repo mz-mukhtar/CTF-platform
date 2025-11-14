@@ -1,0 +1,9 @@
+# Public directory security
+Options -Indexes
+
+# Allow access to public files
+<FilesMatch "\.(jpg|jpeg|png|gif|svg|ico|css|js|woff|woff2|ttf|eot)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+

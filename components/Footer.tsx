@@ -104,6 +104,11 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-4">About</h4>
             <ul className="space-y-2">
               <li>
+                <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
                 <span className="text-gray-400">Flag Format: cvctf{`{...}`}</span>
               </li>
               <li>

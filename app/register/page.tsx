@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { checkPasswordStrength, generateStrongPassword } from '@/utils/passwordStrength'
+import { useCSRF } from '@/hooks/useCSRF'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
@@ -16,7 +17,9 @@ export default function RegisterPage() {
   const [passwordStrength, setPasswordStrength] = useState<ReturnType<typeof checkPasswordStrength> | null>(null)
   const [showSuggestedPassword, setShowSuggestedPassword] = useState(false)
   const [suggestedPassword, setSuggestedPassword] = useState('')
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   const { register } = useAuth()
+  const { csrfToken } = useCSRF()
   const router = useRouter()
 
   const handleGeneratePassword = () => {
@@ -39,6 +42,11 @@ export default function RegisterPage() {
     // Validation
     if (!name || !email || !password || !confirmPassword) {
       setError('All fields are required')
+      return
+    }
+
+    if (!agreedToTerms) {
+      setError('You must agree to the Terms of Service and Usage Policy to register')
       return
     }
 
@@ -221,9 +229,34 @@ export default function RegisterPage() {
             )}
           </div>
 
+          {/* Terms and Conditions Checkbox */}
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="agreeTerms"
+              checked={agreedToTerms}
+              onChange={(e) => {
+                setAgreedToTerms(e.target.checked)
+                setError('')
+              }}
+              required
+              className="mt-1 w-5 h-5 text-primary-600 bg-gray-700 border-gray-600 rounded focus:ring-primary-500 focus:ring-2"
+            />
+            <label htmlFor="agreeTerms" className="text-gray-300 text-sm">
+              I agree to the{' '}
+              <Link
+                href="/terms"
+                target="_blank"
+                className="text-primary-400 hover:underline"
+              >
+                Terms of Service and Usage Policy
+              </Link>
+            </label>
+          </div>
+
           <button
             type="submit"
-            disabled={isLoading || !passwordStrength?.isStrong || password !== confirmPassword}
+            disabled={isLoading || !passwordStrength?.isStrong || password !== confirmPassword || !agreedToTerms}
             className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Registering...' : 'Register'}

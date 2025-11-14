@@ -345,7 +345,9 @@ export default function AdminChallengesPage() {
               </div>
 
               <div>
-                <label className="block text-gray-300 mb-2">Flag (cvctf{`{...}`})</label>
+                <label className="block text-gray-300 mb-2">
+                  Flag (cvctf{`{...}`}) <span className="text-gray-500 text-sm">(will be hashed with SHA-256)</span>
+                </label>
                 <input
                   type="text"
                   name="flag"
@@ -354,6 +356,9 @@ export default function AdminChallengesPage() {
                   placeholder="cvctf{flag_here}"
                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
+                <p className="text-gray-500 text-xs mt-1">
+                  The flag will be automatically hashed using SHA-256 before storage for security.
+                </p>
               </div>
 
               <div>

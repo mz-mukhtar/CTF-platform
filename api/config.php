@@ -60,3 +60,76 @@ function sendError($message, $statusCode = 400) {
     sendResponse(['error' => $message], $statusCode);
 }
 
+// Helper function to hash flag using SHA-256
+function hashFlag($flag) {
+    return hash('sha256', trim($flag));
+}
+
+// Helper function to hash password using bcrypt
+function hashPassword($password) {
+    return password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+}
+
+// Helper function to verify password
+function verifyPassword($password, $hash) {
+    return password_verify($password, $hash);
+}
+
+// CSRF Protection
+function generateCSRFToken() {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    $token = bin2hex(random_bytes(32));
+    $_SESSION['csrf_token'] = $token;
+    return $token;
+}
+
+function validateCSRFToken($token) {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    if (!isset($_SESSION['csrf_token'])) {
+        return false;
+    }
+    return hash_equals($_SESSION['csrf_token'], $token);
+}
+
+// Input sanitization
+function sanitizeInput($data) {
+    if (is_array($data)) {
+        return array_map('sanitizeInput', $data);
+    }
+    return htmlspecialchars(strip_tags(trim($data)), ENT_QUOTES, 'UTF-8');
+}
+
+// Rate limiting (simple in-memory implementation)
+$rateLimitStore = [];
+function checkRateLimit($identifier, $maxRequests = 10, $windowSeconds = 60) {
+    global $rateLimitStore;
+    $now = time();
+    $key = $identifier;
+    
+    if (!isset($rateLimitStore[$key])) {
+        $rateLimitStore[$key] = [];
+    }
+    
+    // Remove old entries
+    $rateLimitStore[$key] = array_filter($rateLimitStore[$key], function($timestamp) use ($now, $windowSeconds) {
+        return ($now - $timestamp) < $windowSeconds;
+    });
+    
+    // Check limit
+    if (count($rateLimitStore[$key]) >= $maxRequests) {
+        return false;
+    }
+    
+    // Add current request
+    $rateLimitStore[$key][] = $now;
+    return true;
+}
+
+function getClientIdentifier() {
+    return $_SERVER['REMOTE_ADDR'] . '_' . ($_SERVER['HTTP_USER_AGENT'] ?? 'unknown');
+}
+
