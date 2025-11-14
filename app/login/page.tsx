@@ -26,24 +26,63 @@ export default function LoginPage() {
 
     setIsLoading(true)
     
-    // Check if admin credentials
-    if (email === 'admin@cybervanguard.com' && password === 'admin123') {
-      // Store admin session
-      localStorage.setItem('ctf_admin', 'true')
-      localStorage.setItem('ctf_admin_email', email)
-      router.push('/admin')
+    // Try API login first (handles admin detection)
+    try {
+      const csrfResponse = await fetch('/api/csrf.php')
+      const csrfData = await csrfResponse.json()
+      
+      const response = await fetch('/api/auth.php?action=login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          csrf_token: csrfData.token,
+        }),
+      })
+      
+      const result = await response.json()
+      if (result.success) {
+        // Check if admin
+        if (result.isAdmin) {
+          localStorage.setItem('ctf_admin', 'true')
+          localStorage.setItem('ctf_admin_email', email)
+          setIsLoading(false)
+          router.push('/admin')
+          return
+        }
+        
+        // Regular user - use AuthContext login to set user state
+        const success = await login(email, password)
+        setIsLoading(false)
+        if (success) {
+          router.push('/dashboard')
+          return
+        }
+      }
+    } catch (apiError) {
+      // Fallback: Check if admin credentials (for development)
+      if (email === 'admin@cybervanguard.com' && password === 'admin123') {
+        localStorage.setItem('ctf_admin', 'true')
+        localStorage.setItem('ctf_admin_email', email)
+        setIsLoading(false)
+        router.push('/admin')
+        return
+      }
+      
+      // Try regular login
+      const success = await login(email, password)
       setIsLoading(false)
-      return
+      if (success) {
+        router.push('/dashboard')
+        return
+      }
     }
     
-    const success = await login(email, password)
     setIsLoading(false)
-
-    if (success) {
-      router.push('/dashboard')
-    } else {
-      setError('Invalid email or password')
-    }
+    setError('Invalid email or password')
   }
 
   return (

@@ -98,105 +98,121 @@ if ($method === 'GET' && $action === 'scoreboard') {
 
 // Admin: Create event
 if ($method === 'POST' && $action === 'create') {
-    requireAdmin();
-    
-    $data = json_decode(file_get_contents('php://input'), true);
-    
-    $pdo = getDB();
-    if (!$pdo) sendError('Database not available');
-    
-    $stmt = $pdo->prepare("
-        INSERT INTO events (name, description, banner_url, start_date, end_date, status)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ");
-    
-    $stmt->execute([
-        $data['name'] ?? '',
-        $data['description'] ?? '',
-        $data['banner_url'] ?? null,
-        $data['start_date'] ?? null,
-        $data['end_date'] ?? null,
-        $data['status'] ?? 'active'
-    ]);
-    
-    sendResponse(['success' => true, 'id' => $pdo->lastInsertId()]);
+    try {
+        requireAdmin();
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        $pdo = getDB();
+        if (!$pdo) sendError('Database not available');
+        
+        $stmt = $pdo->prepare("
+            INSERT INTO events (name, description, banner_url, start_date, end_date, status)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        
+        $stmt->execute([
+            $data['name'] ?? '',
+            $data['description'] ?? '',
+            $data['banner_url'] ?? null,
+            $data['start_date'] ?? null,
+            $data['end_date'] ?? null,
+            $data['status'] ?? 'active'
+        ]);
+        
+        sendResponse(['success' => true, 'id' => $pdo->lastInsertId()]);
+    } catch (Exception $e) {
+        sendError('Failed to create event', 500);
+    }
 }
 
 // Admin: Update event
 if ($method === 'PUT' && $action === 'update') {
-    requireAdmin();
-    
-    $id = $_GET['id'] ?? '';
-    if (!$id) sendError('Event ID required');
-    
-    $data = json_decode(file_get_contents('php://input'), true);
-    
-    $pdo = getDB();
-    if (!$pdo) sendError('Database not available');
-    
-    $stmt = $pdo->prepare("
-        UPDATE events 
-        SET name = ?, description = ?, banner_url = ?, start_date = ?, end_date = ?, status = ?
-        WHERE id = ?
-    ");
-    
-    $stmt->execute([
-        $data['name'] ?? '',
-        $data['description'] ?? '',
-        $data['banner_url'] ?? null,
-        $data['start_date'] ?? null,
-        $data['end_date'] ?? null,
-        $data['status'] ?? 'active',
-        $id
-    ]);
-    
-    sendResponse(['success' => true]);
+    try {
+        requireAdmin();
+        
+        $id = $_GET['id'] ?? '';
+        if (!$id) sendError('Event ID required');
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        $pdo = getDB();
+        if (!$pdo) sendError('Database not available');
+        
+        $stmt = $pdo->prepare("
+            UPDATE events 
+            SET name = ?, description = ?, banner_url = ?, start_date = ?, end_date = ?, status = ?
+            WHERE id = ?
+        ");
+        
+        $stmt->execute([
+            $data['name'] ?? '',
+            $data['description'] ?? '',
+            $data['banner_url'] ?? null,
+            $data['start_date'] ?? null,
+            $data['end_date'] ?? null,
+            $data['status'] ?? 'active',
+            $id
+        ]);
+        
+        sendResponse(['success' => true]);
+    } catch (Exception $e) {
+        sendError('Failed to update event', 500);
+    }
 }
 
 // Admin: Archive event (move challenges to general area)
 if ($method === 'POST' && $action === 'archive') {
-    requireAdmin();
-    
-    $id = $_GET['id'] ?? '';
-    if (!$id) sendError('Event ID required');
-    
-    $pdo = getDB();
-    if (!$pdo) sendError('Database not available');
-    
-    // Update event status
-    $stmt = $pdo->prepare("UPDATE events SET status = 'archived' WHERE id = ?");
-    $stmt->execute([$id]);
-    
-    // Move challenges to general area (set event_id to null)
-    $stmt = $pdo->prepare("UPDATE challenges SET event_id = NULL WHERE event_id = ?");
-    $stmt->execute([$id]);
-    
-    sendResponse(['success' => true]);
+    try {
+        requireAdmin();
+        
+        $id = $_GET['id'] ?? '';
+        if (!$id) sendError('Event ID required');
+        
+        $pdo = getDB();
+        if (!$pdo) sendError('Database not available');
+        
+        // Update event status
+        $stmt = $pdo->prepare("UPDATE events SET status = 'archived' WHERE id = ?");
+        $stmt->execute([$id]);
+        
+        // Move challenges to general area (set event_id to null)
+        $stmt = $pdo->prepare("UPDATE challenges SET event_id = NULL WHERE event_id = ?");
+        $stmt->execute([$id]);
+        
+        sendResponse(['success' => true]);
+    } catch (Exception $e) {
+        sendError('Failed to archive event', 500);
+    }
 }
 
 // Admin: Delete event
 if ($method === 'DELETE' && $action === 'delete') {
-    requireAdmin();
-    
-    $id = $_GET['id'] ?? '';
-    if (!$id) sendError('Event ID required');
-    
-    $pdo = getDB();
-    if (!$pdo) sendError('Database not available');
-    
-    // Check if event has challenges
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM challenges WHERE event_id = ?");
-    $stmt->execute([$id]);
-    $count = $stmt->fetchColumn();
-    
-    if ($count > 0) {
-        sendError('Cannot delete event: it has associated challenges. Archive it instead.', 400);
+    try {
+        requireAdmin();
+        
+        $id = $_GET['id'] ?? '';
+        if (!$id) sendError('Event ID required');
+        
+        $pdo = getDB();
+        if (!$pdo) sendError('Database not available');
+        
+        // Check if event has challenges
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM challenges WHERE event_id = ?");
+        $stmt->execute([$id]);
+        $count = $stmt->fetchColumn();
+        
+        if ($count > 0) {
+            sendError('Cannot delete event: it has associated challenges. Archive it instead.', 400);
+        }
+        
+        $stmt = $pdo->prepare("DELETE FROM events WHERE id = ?");
+        $stmt->execute([$id]);
+        
+        sendResponse(['success' => true]);
+    } catch (Exception $e) {
+        sendError('Failed to delete event', 500);
     }
-    
-    $stmt = $pdo->prepare("DELETE FROM events WHERE id = ?");
-    $stmt->execute([$id]);
-    
-    sendResponse(['success' => true]);
 }
 
 function requireAdmin() {

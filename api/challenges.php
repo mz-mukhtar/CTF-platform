@@ -8,9 +8,8 @@ $action = $_GET['action'] ?? '';
 if ($method === 'GET' && $action === 'list') {
     $pdo = getDB();
     if (!$pdo) {
-        // Fallback to JSON file for development
-        $challenges = json_decode(file_get_contents('../data/challenges.json'), true) ?? [];
-        sendResponse(['challenges' => $challenges]);
+        // Return empty array instead of exposing file paths
+        sendResponse(['challenges' => []]);
     }
     
     $eventId = $_GET['event_id'] ?? null;
@@ -69,136 +68,148 @@ if ($method === 'GET' && $action === 'get') {
 
 // Admin: Add challenge
 if ($method === 'POST' && $action === 'add') {
-    requireAdmin();
-    
-    // CSRF protection
-    $data = json_decode(file_get_contents('php://input'), true);
-    $csrfToken = $data['csrf_token'] ?? '';
-    if (!validateCSRFToken($csrfToken)) {
-        sendError('Invalid CSRF token', 403);
-    }
-    
-    // Rate limiting
-    $clientId = getClientIdentifier();
-    if (!checkRateLimit($clientId . '_admin', 20, 60)) {
-        sendError('Too many requests. Please try again later.', 429);
-    }
-    
-    // Sanitize inputs
-    $title = sanitizeInput($data['title'] ?? '');
-    $description = sanitizeInput($data['description'] ?? '');
-    $category = sanitizeInput($data['category'] ?? '');
-    $difficulty = sanitizeInput($data['difficulty'] ?? '');
-    $points = intval($data['points'] ?? 0);
-    $flag = $data['flag'] ?? '';
-    
-    if (empty($title) || empty($flag)) {
-        sendError('Title and flag are required', 400);
-    }
-    
-    $pdo = getDB();
-    if (!$pdo) sendError('Database not available');
-    
-    // Hash the flag before storing
-    $flagHash = hashFlag($flag);
-    
-    $stmt = $pdo->prepare("
-        INSERT INTO challenges (title, description, category, difficulty, points, flag_hash, files, challenge_link, event_id, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ");
-    
-    $stmt->execute([
-        $title,
-        $description,
-        $category,
-        $difficulty,
-        $points,
-        $flagHash,
-        json_encode($data['files'] ?? []),
-        $data['challenge_link'] ?? null,
-        $data['event_id'] ?? null,
-        $data['status'] ?? 'active'
-    ]);
-    
-    sendResponse(['success' => true, 'id' => $pdo->lastInsertId()]);
-}
-
-// Admin: Update challenge
-if ($method === 'PUT' && $action === 'update') {
-    requireAdmin();
-    
-    $id = $_GET['id'] ?? '';
-    if (!$id) sendError('Challenge ID required');
-    
-    $data = json_decode(file_get_contents('php://input'), true);
-    
-    $pdo = getDB();
-    if (!$pdo) sendError('Database not available');
-    
-    // Hash the flag before storing (if provided)
-    $flagHash = isset($data['flag']) ? hashFlag($data['flag']) : null;
-    
-    if ($flagHash) {
+    try {
+        requireAdmin();
+        
+        // CSRF protection
+        $data = json_decode(file_get_contents('php://input'), true);
+        $csrfToken = $data['csrf_token'] ?? '';
+        if (!validateCSRFToken($csrfToken)) {
+            sendError('Invalid CSRF token', 403);
+        }
+        
+        // Rate limiting
+        $clientId = getClientIdentifier();
+        if (!checkRateLimit($clientId . '_admin', 20, 60)) {
+            sendError('Too many requests. Please try again later.', 429);
+        }
+        
+        // Sanitize inputs
+        $title = sanitizeInput($data['title'] ?? '');
+        $description = sanitizeInput($data['description'] ?? '');
+        $category = sanitizeInput($data['category'] ?? '');
+        $difficulty = sanitizeInput($data['difficulty'] ?? '');
+        $points = intval($data['points'] ?? 0);
+        $flag = $data['flag'] ?? '';
+        
+        if (empty($title) || empty($flag)) {
+            sendError('Title and flag are required', 400);
+        }
+        
+        $pdo = getDB();
+        if (!$pdo) sendError('Database not available');
+        
+        // Hash the flag before storing
+        $flagHash = hashFlag($flag);
+        
         $stmt = $pdo->prepare("
-            UPDATE challenges 
-            SET title = ?, description = ?, category = ?, difficulty = ?, points = ?, 
-                flag_hash = ?, files = ?, challenge_link = ?, event_id = ?, status = ?
-            WHERE id = ?
+            INSERT INTO challenges (title, description, category, difficulty, points, flag_hash, files, challenge_link, event_id, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $stmt->execute([
-            $data['title'] ?? '',
-            $data['description'] ?? '',
-            $data['category'] ?? '',
-            $data['difficulty'] ?? '',
-            $data['points'] ?? 0,
+            $title,
+            $description,
+            $category,
+            $difficulty,
+            $points,
             $flagHash,
             json_encode($data['files'] ?? []),
             $data['challenge_link'] ?? null,
             $data['event_id'] ?? null,
-            $data['status'] ?? 'active',
-            $id
+            $data['status'] ?? 'active'
         ]);
-    } else {
-        // Update without changing flag
-        $stmt = $pdo->prepare("
-            UPDATE challenges 
-            SET title = ?, description = ?, category = ?, difficulty = ?, points = ?, 
-                files = ?, challenge_link = ?, event_id = ?, status = ?
-            WHERE id = ?
-        ");
         
-        $stmt->execute([
-            $data['title'] ?? '',
-            $data['description'] ?? '',
-            $data['category'] ?? '',
-            $data['difficulty'] ?? '',
-            $data['points'] ?? 0,
-            json_encode($data['files'] ?? []),
-            $data['challenge_link'] ?? null,
-            $data['event_id'] ?? null,
-            $data['status'] ?? 'active',
-            $id
-        ]);
+        sendResponse(['success' => true, 'id' => $pdo->lastInsertId()]);
+    } catch (Exception $e) {
+        sendError('Failed to create challenge', 500);
     }
-    
-    sendResponse(['success' => true]);
+}
+
+// Admin: Update challenge
+if ($method === 'PUT' && $action === 'update') {
+    try {
+        requireAdmin();
+        
+        $id = $_GET['id'] ?? '';
+        if (!$id) sendError('Challenge ID required');
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        $pdo = getDB();
+        if (!$pdo) sendError('Database not available');
+        
+        // Hash the flag before storing (if provided)
+        $flagHash = isset($data['flag']) ? hashFlag($data['flag']) : null;
+        
+        if ($flagHash) {
+            $stmt = $pdo->prepare("
+                UPDATE challenges 
+                SET title = ?, description = ?, category = ?, difficulty = ?, points = ?, 
+                    flag_hash = ?, files = ?, challenge_link = ?, event_id = ?, status = ?
+                WHERE id = ?
+            ");
+            
+            $stmt->execute([
+                $data['title'] ?? '',
+                $data['description'] ?? '',
+                $data['category'] ?? '',
+                $data['difficulty'] ?? '',
+                $data['points'] ?? 0,
+                $flagHash,
+                json_encode($data['files'] ?? []),
+                $data['challenge_link'] ?? null,
+                $data['event_id'] ?? null,
+                $data['status'] ?? 'active',
+                $id
+            ]);
+        } else {
+            // Update without changing flag
+            $stmt = $pdo->prepare("
+                UPDATE challenges 
+                SET title = ?, description = ?, category = ?, difficulty = ?, points = ?, 
+                    files = ?, challenge_link = ?, event_id = ?, status = ?
+                WHERE id = ?
+            ");
+            
+            $stmt->execute([
+                $data['title'] ?? '',
+                $data['description'] ?? '',
+                $data['category'] ?? '',
+                $data['difficulty'] ?? '',
+                $data['points'] ?? 0,
+                json_encode($data['files'] ?? []),
+                $data['challenge_link'] ?? null,
+                $data['event_id'] ?? null,
+                $data['status'] ?? 'active',
+                $id
+            ]);
+        }
+        
+        sendResponse(['success' => true]);
+    } catch (Exception $e) {
+        sendError('Failed to update challenge', 500);
+    }
 }
 
 // Admin: Delete challenge
 if ($method === 'DELETE' && $action === 'delete') {
-    requireAdmin();
-    
-    $id = $_GET['id'] ?? '';
-    if (!$id) sendError('Challenge ID required');
-    
-    $pdo = getDB();
-    if (!$pdo) sendError('Database not available');
-    
-    $stmt = $pdo->prepare("DELETE FROM challenges WHERE id = ?");
-    $stmt->execute([$id]);
-    
-    sendResponse(['success' => true]);
+    try {
+        requireAdmin();
+        
+        $id = $_GET['id'] ?? '';
+        if (!$id) sendError('Challenge ID required');
+        
+        $pdo = getDB();
+        if (!$pdo) sendError('Database not available');
+        
+        $stmt = $pdo->prepare("DELETE FROM challenges WHERE id = ?");
+        $stmt->execute([$id]);
+        
+        sendResponse(['success' => true]);
+    } catch (Exception $e) {
+        sendError('Failed to delete challenge', 500);
+    }
 }
 
 function requireAdmin() {

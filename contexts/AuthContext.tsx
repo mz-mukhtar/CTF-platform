@@ -70,6 +70,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       const result = await response.json()
       if (result.success) {
+        // Check if admin
+        if (result.isAdmin) {
+          localStorage.setItem('ctf_admin', 'true')
+          localStorage.setItem('ctf_admin_email', email)
+        }
+        
         // Store user data
         const userData = {
           id: result.user.id.toString(),

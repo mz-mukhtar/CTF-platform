@@ -19,76 +19,88 @@ if ($method === 'GET' && $action === 'list') {
 
 // Admin: Add category
 if ($method === 'POST' && $action === 'add') {
-    requireAdmin();
-    
-    $data = json_decode(file_get_contents('php://input'), true);
-    
-    $pdo = getDB();
-    if (!$pdo) sendError('Database not available');
-    
-    $stmt = $pdo->prepare("
-        INSERT INTO categories (name, description)
-        VALUES (?, ?)
-    ");
-    
-    $stmt->execute([
-        $data['name'] ?? '',
-        $data['description'] ?? null
-    ]);
-    
-    sendResponse(['success' => true, 'id' => $pdo->lastInsertId()]);
+    try {
+        requireAdmin();
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        $pdo = getDB();
+        if (!$pdo) sendError('Database not available');
+        
+        $stmt = $pdo->prepare("
+            INSERT INTO categories (name, description)
+            VALUES (?, ?)
+        ");
+        
+        $stmt->execute([
+            $data['name'] ?? '',
+            $data['description'] ?? null
+        ]);
+        
+        sendResponse(['success' => true, 'id' => $pdo->lastInsertId()]);
+    } catch (Exception $e) {
+        sendError('Failed to create category', 500);
+    }
 }
 
 // Admin: Update category
 if ($method === 'PUT' && $action === 'update') {
-    requireAdmin();
-    
-    $id = $_GET['id'] ?? '';
-    if (!$id) sendError('Category ID required');
-    
-    $data = json_decode(file_get_contents('php://input'), true);
-    
-    $pdo = getDB();
-    if (!$pdo) sendError('Database not available');
-    
-    $stmt = $pdo->prepare("
-        UPDATE categories 
-        SET name = ?, description = ?
-        WHERE id = ?
-    ");
-    
-    $stmt->execute([
-        $data['name'] ?? '',
-        $data['description'] ?? null,
-        $id
-    ]);
-    
-    sendResponse(['success' => true]);
+    try {
+        requireAdmin();
+        
+        $id = $_GET['id'] ?? '';
+        if (!$id) sendError('Category ID required');
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        $pdo = getDB();
+        if (!$pdo) sendError('Database not available');
+        
+        $stmt = $pdo->prepare("
+            UPDATE categories 
+            SET name = ?, description = ?
+            WHERE id = ?
+        ");
+        
+        $stmt->execute([
+            $data['name'] ?? '',
+            $data['description'] ?? null,
+            $id
+        ]);
+        
+        sendResponse(['success' => true]);
+    } catch (Exception $e) {
+        sendError('Failed to update category', 500);
+    }
 }
 
 // Admin: Delete category
 if ($method === 'DELETE' && $action === 'delete') {
-    requireAdmin();
-    
-    $id = $_GET['id'] ?? '';
-    if (!$id) sendError('Category ID required');
-    
-    $pdo = getDB();
-    if (!$pdo) sendError('Database not available');
-    
-    // Check if category is used by challenges
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM challenges WHERE category = (SELECT name FROM categories WHERE id = ?)");
-    $stmt->execute([$id]);
-    $count = $stmt->fetchColumn();
-    
-    if ($count > 0) {
-        sendError('Cannot delete category: it is used by challenges', 400);
+    try {
+        requireAdmin();
+        
+        $id = $_GET['id'] ?? '';
+        if (!$id) sendError('Category ID required');
+        
+        $pdo = getDB();
+        if (!$pdo) sendError('Database not available');
+        
+        // Check if category is used by challenges
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM challenges WHERE category = (SELECT name FROM categories WHERE id = ?)");
+        $stmt->execute([$id]);
+        $count = $stmt->fetchColumn();
+        
+        if ($count > 0) {
+            sendError('Cannot delete category: it is used by challenges', 400);
+        }
+        
+        $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
+        $stmt->execute([$id]);
+        
+        sendResponse(['success' => true]);
+    } catch (Exception $e) {
+        sendError('Failed to delete category', 500);
     }
-    
-    $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
-    $stmt->execute([$id]);
-    
-    sendResponse(['success' => true]);
 }
 
 function requireAdmin() {

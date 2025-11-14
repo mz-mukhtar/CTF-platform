@@ -97,6 +97,8 @@ try {
         ]);
     }
 } catch (PDOException $e) {
-    sendError('Database error: ' . $e->getMessage(), 500);
+    sendError('Failed to process flag submission', 500);
+} catch (Exception $e) {
+    sendError('Failed to process flag submission', 500);
 }
 

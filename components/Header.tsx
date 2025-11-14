@@ -11,8 +11,23 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   useEffect(() => {
-    const admin = localStorage.getItem('ctf_admin')
-    setIsAdmin(!!admin)
+    const checkAdmin = () => {
+      const admin = localStorage.getItem('ctf_admin')
+      setIsAdmin(!!admin)
+    }
+    
+    checkAdmin()
+    
+    // Listen for storage changes (when admin logs in/out in another tab)
+    window.addEventListener('storage', checkAdmin)
+    
+    // Also check periodically in case of same-tab changes
+    const interval = setInterval(checkAdmin, 1000)
+    
+    return () => {
+      window.removeEventListener('storage', checkAdmin)
+      clearInterval(interval)
+    }
   }, [])
 
   return (

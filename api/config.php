@@ -45,7 +45,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Helper function to check if user is admin
 function isAdmin($email) {
-    return $email === ADMIN_EMAIL;
+    if (empty($email)) {
+        return false;
+    }
+    
+    // Check against configured admin email
+    if ($email === ADMIN_EMAIL) {
+        return true;
+    }
+    
+    // Also check database for admin role
+    try {
+        $pdo = getDB();
+        if ($pdo) {
+            $stmt = $pdo->prepare("SELECT role FROM users WHERE email = ? AND is_banned = FALSE");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch();
+            if ($user && $user['role'] === 'admin') {
+                return true;
+            }
+        }
+    } catch (Exception $e) {
+        // Silently fail and fall back to email check
+    }
+    
+    return false;
 }
 
 // Helper function to send JSON response
@@ -55,9 +79,39 @@ function sendResponse($data, $statusCode = 200) {
     exit();
 }
 
-// Helper function to send error
+// Helper function to send error (sanitized for security)
 function sendError($message, $statusCode = 400) {
-    sendResponse(['error' => $message], $statusCode);
+    // Sanitize error messages to prevent information leakage
+    $sanitizedMessage = 'An error occurred';
+    
+    // Only show specific errors for known safe messages
+    $safeMessages = [
+        'Invalid credentials',
+        'Email and password are required',
+        'Invalid CSRF token',
+        'Admin access required',
+        'Too many requests',
+        'Missing required fields',
+        'Invalid action',
+        'Challenge not found',
+        'Event not found',
+        'User not found',
+        'Database not available'
+    ];
+    
+    // Check if message is in safe list
+    foreach ($safeMessages as $safe) {
+        if (stripos($message, $safe) !== false) {
+            $sanitizedMessage = $message;
+            break;
+        }
+    }
+    
+    // Remove any file paths or sensitive information
+    $sanitizedMessage = preg_replace('/\.\.\/[^\s]+/', '[path removed]', $sanitizedMessage);
+    $sanitizedMessage = preg_replace('/\/[^\s]+\.(php|json|sql|log)/i', '[file removed]', $sanitizedMessage);
+    
+    sendResponse(['error' => $sanitizedMessage], $statusCode);
 }
 
 // Helper function to hash flag using SHA-256
