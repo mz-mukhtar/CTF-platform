@@ -81,19 +81,13 @@ export default function Home() {
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          {/* Action Button */}
+          <div className="flex justify-center">
             <Link
               href="/play"
               className="inline-block bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold text-lg px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
               Play CTF Challenges
-            </Link>
-            <Link
-              href="/login"
-              className="inline-block bg-gray-700 hover:bg-gray-600 text-white font-bold text-lg px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105"
-            >
-              Login / Register
             </Link>
           </div>
         </div>

@@ -19,6 +19,8 @@ interface AuthContextType {
   logout: () => void
   submitFlag: (challengeId: string, flag: string, points: number) => Promise<boolean>
   isChallengeSolved: (challengeId: string) => boolean
+  changeUsername: (newUsername: string) => Promise<boolean>
+  changePassword: (oldPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>
   isLoading: boolean
 }
 
@@ -177,6 +179,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return user.solvedChallenges.includes(challengeId)
   }
 
+  const changeUsername = async (newUsername: string): Promise<boolean> => {
+    if (!user || !newUsername.trim()) return false
+
+    try {
+      const usersJson = localStorage.getItem('ctf_users')
+      if (!usersJson) return false
+
+      const users: User[] = JSON.parse(usersJson)
+      const userIndex = users.findIndex((u) => u.id === user.id)
+      
+      if (userIndex === -1) return false
+
+      // Update username
+      const updatedUser: User = {
+        ...user,
+        name: newUsername.trim(),
+      }
+
+      users[userIndex] = updatedUser
+      localStorage.setItem('ctf_users', JSON.stringify(users))
+      setUser(updatedUser)
+      localStorage.setItem('ctf_user', JSON.stringify(updatedUser))
+      
+      return true
+    } catch (e) {
+      console.error('Error changing username:', e)
+      return false
+    }
+  }
+
+  const changePassword = async (
+    oldPassword: string,
+    newPassword: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    if (!user) {
+      return { success: false, error: 'Not logged in' }
+    }
+
+    // Verify old password
+    if (user.password !== oldPassword) {
+      return { success: false, error: 'Current password is incorrect' }
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      return { success: false, error: 'New password must be at least 6 characters' }
+    }
+
+    try {
+      const usersJson = localStorage.getItem('ctf_users')
+      if (!usersJson) {
+        return { success: false, error: 'User data not found' }
+      }
+
+      const users: User[] = JSON.parse(usersJson)
+      const userIndex = users.findIndex((u) => u.id === user.id)
+      
+      if (userIndex === -1) {
+        return { success: false, error: 'User not found' }
+      }
+
+      // Update password
+      const updatedUser: User = {
+        ...user,
+        password: newPassword, // In production, hash this
+      }
+
+      users[userIndex] = updatedUser
+      localStorage.setItem('ctf_users', JSON.stringify(users))
+      setUser(updatedUser)
+      localStorage.setItem('ctf_user', JSON.stringify(updatedUser))
+      
+      return { success: true }
+    } catch (e) {
+      console.error('Error changing password:', e)
+      return { success: false, error: 'Failed to update password' }
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -186,6 +266,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         submitFlag,
         isChallengeSolved,
+        changeUsername,
+        changePassword,
         isLoading,
       }}
     >
