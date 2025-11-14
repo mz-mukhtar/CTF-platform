@@ -190,7 +190,7 @@ function ChallengeDetailContent({ params }: { params: { id: string } }) {
               {isSolved ? (
                 <div className="bg-gray-700/50 rounded-lg p-6 text-center">
                   <p className="text-gray-300 text-lg">
-                    🎉 Congratulations! You've already completed this challenge.
+                    🎉 Congratulations! You&apos;ve already completed this challenge.
                   </p>
                   <p className="text-gray-400 mt-2">
                     You earned {challenge.points} points for solving this challenge.

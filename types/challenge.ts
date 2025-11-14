@@ -18,5 +18,6 @@ export interface Challenge {
   flag?: string // Plaintext flag (only used in admin panel, never stored in DB)
   files?: ChallengeFile[] // Optional files to download
   challengeLink?: string // Optional link to challenge instance
+  event_id?: number | null // Optional event ID (null for general challenges)
 }
 

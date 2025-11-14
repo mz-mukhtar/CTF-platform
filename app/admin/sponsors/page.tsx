@@ -146,7 +146,7 @@ export default function AdminSponsorsPage() {
                   {sponsors.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
-                        No sponsors yet. Click "Add Sponsor" to create one.
+                        No sponsors yet. Click &quot;Add Sponsor&quot; to create one.
                       </td>
                     </tr>
                   ) : (

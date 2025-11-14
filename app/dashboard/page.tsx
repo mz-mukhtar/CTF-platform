@@ -414,7 +414,7 @@ function DashboardContent() {
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 md:mb-6">Solved Challenges</h2>
             {user?.challengesSolved === 0 ? (
               <p className="text-gray-400 text-center py-8">
-                You haven't solved any challenges yet. Start playing to see your progress here!
+                You haven&apos;t solved any challenges yet. Start playing to see your progress here!
               </p>
             ) : (
               <div className="space-y-2">

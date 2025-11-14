@@ -135,7 +135,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-bold text-white mb-4">9. Limitation of Liability</h2>
               <p className="text-gray-300 leading-relaxed">
-                The CyberVanguard CTF Platform is provided "as is" without warranties of any kind. We are not liable for any damages, losses, or issues arising from:
+                The CyberVanguard CTF Platform is provided &quot;as is&quot; without warranties of any kind. We are not liable for any damages, losses, or issues arising from:
               </p>
               <ul className="list-disc list-inside text-gray-300 space-y-2 ml-4 mt-4">
                 <li>Platform downtime or technical issues</li>
@@ -164,7 +164,7 @@ export default function TermsPage() {
                 <p className="text-gray-300">
                   <strong className="text-white">CyberVanguard CTF Platform</strong><br />
                   Cyber Club @AAU<br />
-                  Email: cybervanguard.club@aait.edu.et
+                  Email: ctf@cybervanguard.club.et
                 </p>
               </div>
             </section>

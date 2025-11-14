@@ -146,7 +146,7 @@ export default function Home() {
               </div>
               <p className="text-gray-300 text-sm md:text-base leading-relaxed mb-4">
                 Capture The Flag (CTF) competitions are cybersecurity challenges where participants 
-                solve security-related tasks to find hidden "flags" - strings of text that prove you've 
+                solve security-related tasks to find hidden &quot;flags&quot; - strings of text that prove you&apos;ve 
                 completed a challenge.
               </p>
               <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-700">
@@ -183,7 +183,7 @@ export default function Home() {
           {/* Call to Action */}
           <div className="bg-gradient-to-r from-primary-500/10 to-primary-600/10 rounded-2xl p-6 md:p-8 border border-primary-500/30 text-center">
             <p className="text-gray-300 text-base md:text-lg mb-4">
-              Whether you're a beginner looking to learn or an experienced professional seeking to 
+              Whether you&apos;re a beginner looking to learn or an experienced professional seeking to 
               test your skills, this CTF platform offers challenges for all levels.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

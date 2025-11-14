@@ -159,6 +159,7 @@ export default function ScoreboardPage() {
               </table>
             </div>
           </div>
+          </div>
 
           {/* Info */}
           <div className="mt-6 text-center text-gray-400 text-sm">

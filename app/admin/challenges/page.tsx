@@ -201,7 +201,7 @@ export default function AdminChallengesPage() {
                   {challenges.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
-                        No challenges yet. Click "Add Challenge" to create one.
+                        No challenges yet. Click &quot;Add Challenge&quot; to create one.
                       </td>
                     </tr>
                   ) : (

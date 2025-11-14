@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import ChallengeCard from '@/components/ChallengeCard'
 import { Challenge } from '@/types/challenge'
@@ -23,26 +23,7 @@ export default function PlayPage() {
     loadChallenges()
   }, [])
 
-  useEffect(() => {
-    filterChallenges()
-  }, [challenges, selectedCategory, selectedDifficulty, selectedEvent, searchQuery])
-
-  const loadChallenges = async () => {
-    try {
-      const response = await fetch('/api/challenges.php?action=list&status=active')
-      const data = await response.json()
-      setChallenges(data.challenges || [])
-    } catch (e) {
-      console.error('Error loading challenges:', e)
-      // Fallback to local data
-      const { challenges: localChallenges } = await import('@/data/challenges')
-      setChallenges(localChallenges)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const filterChallenges = () => {
+  const filterChallenges = useCallback(() => {
     let filtered = [...challenges]
 
     // Filter by category
@@ -71,6 +52,25 @@ export default function PlayPage() {
     }
 
     setFilteredChallenges(filtered)
+  }, [challenges, selectedCategory, selectedDifficulty, selectedEvent, searchQuery])
+
+  useEffect(() => {
+    filterChallenges()
+  }, [filterChallenges])
+
+  const loadChallenges = async () => {
+    try {
+      const response = await fetch('/api/challenges.php?action=list&status=active')
+      const data = await response.json()
+      setChallenges(data.challenges || [])
+    } catch (e) {
+      console.error('Error loading challenges:', e)
+      // Fallback to local data
+      const { challenges: localChallenges } = await import('@/data/challenges')
+      setChallenges(localChallenges)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (isLoading) {

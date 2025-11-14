@@ -142,7 +142,7 @@ export default function AdminCategoriesPage() {
                   {categories.length === 0 ? (
                     <tr>
                       <td colSpan={3} className="px-6 py-8 text-center text-gray-400">
-                        No categories yet. Click "Add Category" to create one.
+                        No categories yet. Click &quot;Add Category&quot; to create one.
                       </td>
                     </tr>
                   ) : (
