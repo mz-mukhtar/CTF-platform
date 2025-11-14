@@ -4,20 +4,20 @@ require_once 'config.php';
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
-// Get all sponsors
+// Get all categories
 if ($method === 'GET' && $action === 'list') {
     $pdo = getDB();
     if (!$pdo) {
-        sendResponse(['sponsors' => []]);
+        sendResponse(['categories' => []]);
     }
     
-    $stmt = $pdo->query("SELECT * FROM sponsors ORDER BY display_order ASC");
-    $sponsors = $stmt->fetchAll();
+    $stmt = $pdo->query("SELECT * FROM categories ORDER BY name ASC");
+    $categories = $stmt->fetchAll();
     
-    sendResponse(['sponsors' => $sponsors]);
+    sendResponse(['categories' => $categories]);
 }
 
-// Admin: Add sponsor
+// Admin: Add category
 if ($method === 'POST' && $action === 'add') {
     requireAdmin();
     
@@ -27,26 +27,24 @@ if ($method === 'POST' && $action === 'add') {
     if (!$pdo) sendError('Database not available');
     
     $stmt = $pdo->prepare("
-        INSERT INTO sponsors (name, logo_url, website_url, display_order)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO categories (name, description)
+        VALUES (?, ?)
     ");
     
     $stmt->execute([
         $data['name'] ?? '',
-        $data['logo_url'] ?? '',
-        $data['website_url'] ?? null,
-        $data['display_order'] ?? 0
+        $data['description'] ?? null
     ]);
     
     sendResponse(['success' => true, 'id' => $pdo->lastInsertId()]);
 }
 
-// Admin: Update sponsor
+// Admin: Update category
 if ($method === 'PUT' && $action === 'update') {
     requireAdmin();
     
     $id = $_GET['id'] ?? '';
-    if (!$id) sendError('Sponsor ID required');
+    if (!$id) sendError('Category ID required');
     
     $data = json_decode(file_get_contents('php://input'), true);
     
@@ -54,33 +52,40 @@ if ($method === 'PUT' && $action === 'update') {
     if (!$pdo) sendError('Database not available');
     
     $stmt = $pdo->prepare("
-        UPDATE sponsors 
-        SET name = ?, logo_url = ?, website_url = ?, display_order = ?
+        UPDATE categories 
+        SET name = ?, description = ?
         WHERE id = ?
     ");
     
     $stmt->execute([
         $data['name'] ?? '',
-        $data['logo_url'] ?? '',
-        $data['website_url'] ?? null,
-        $data['display_order'] ?? 0,
+        $data['description'] ?? null,
         $id
     ]);
     
     sendResponse(['success' => true]);
 }
 
-// Admin: Delete sponsor
+// Admin: Delete category
 if ($method === 'DELETE' && $action === 'delete') {
     requireAdmin();
     
     $id = $_GET['id'] ?? '';
-    if (!$id) sendError('Sponsor ID required');
+    if (!$id) sendError('Category ID required');
     
     $pdo = getDB();
     if (!$pdo) sendError('Database not available');
     
-    $stmt = $pdo->prepare("DELETE FROM sponsors WHERE id = ?");
+    // Check if category is used by challenges
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM challenges WHERE category = (SELECT name FROM categories WHERE id = ?)");
+    $stmt->execute([$id]);
+    $count = $stmt->fetchColumn();
+    
+    if ($count > 0) {
+        sendError('Cannot delete category: it is used by challenges', 400);
+    }
+    
+    $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
     $stmt->execute([$id]);
     
     sendResponse(['success' => true]);

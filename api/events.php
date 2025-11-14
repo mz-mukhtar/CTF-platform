@@ -116,6 +116,31 @@ if ($method === 'POST' && $action === 'archive') {
     sendResponse(['success' => true]);
 }
 
+// Admin: Delete event
+if ($method === 'DELETE' && $action === 'delete') {
+    requireAdmin();
+    
+    $id = $_GET['id'] ?? '';
+    if (!$id) sendError('Event ID required');
+    
+    $pdo = getDB();
+    if (!$pdo) sendError('Database not available');
+    
+    // Check if event has challenges
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM challenges WHERE event_id = ?");
+    $stmt->execute([$id]);
+    $count = $stmt->fetchColumn();
+    
+    if ($count > 0) {
+        sendError('Cannot delete event: it has associated challenges. Archive it instead.', 400);
+    }
+    
+    $stmt = $pdo->prepare("DELETE FROM events WHERE id = ?");
+    $stmt->execute([$id]);
+    
+    sendResponse(['success' => true]);
+}
+
 function requireAdmin() {
     $email = $_SERVER['HTTP_X_ADMIN_EMAIL'] ?? '';
     if (!isAdmin($email)) {
