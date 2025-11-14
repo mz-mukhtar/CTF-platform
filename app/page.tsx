@@ -1,44 +1,90 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import CountdownTimer from '@/components/CountdownTimer'
 
+interface Event {
+  id: number
+  name: string
+  description: string
+  banner_url: string | null
+  start_date: string
+  end_date: string
+  status: string
+}
+
 export default function Home() {
-  // Placeholder date - replace with actual date when needed
-  const eventDate = 'PLACEHOLDER_DATE' // Format: 'YYYY-MM-DDTHH:mm:ss' or 'PLACEHOLDER_DATE'
+  const [activeEvent, setActiveEvent] = useState<Event | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    loadActiveEvent()
+  }, [])
+
+  const loadActiveEvent = async () => {
+    try {
+      const response = await fetch('/api/events.php?action=active')
+      const data = await response.json()
+      setActiveEvent(data.event)
+    } catch (e) {
+      console.error('Error loading active event:', e)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="text-center max-w-4xl mx-auto">
-          {/* Event Name */}
+          {/* Platform Name */}
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
-            Cyber Vanguard CTF 2025
+            CyberVanguard CTF Platform
           </h1>
-
-          {/* Date */}
-          <p className="text-xl md:text-2xl text-gray-300 mb-4">
-            Date: <span className="text-primary-400 font-semibold">[Event Date Placeholder]</span>
-          </p>
 
           {/* Short Description */}
           <p className="text-lg md:text-xl text-gray-300 mb-8 leading-relaxed">
-            Join the ultimate cybersecurity challenge! Test your skills in penetration testing, 
+            Join the ultimate cybersecurity challenge platform! Test your skills in penetration testing, 
             cryptography, reverse engineering, and more. Compete with the best and prove your expertise.
           </p>
 
-          {/* Countdown Timer */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-semibold text-white mb-6">CTF starts in:</h2>
-            <CountdownTimer targetDate={eventDate} />
-          </div>
+          {/* Active Event Section */}
+          {!isLoading && activeEvent && (
+            <div className="bg-gray-800/50 rounded-lg p-8 mb-8 border border-primary-500/50">
+              <h2 className="text-2xl font-bold text-white mb-4">🎯 Active Event</h2>
+              <h3 className="text-xl font-semibold text-primary-400 mb-2">{activeEvent.name}</h3>
+              {activeEvent.description && (
+                <p className="text-gray-300 mb-4">{activeEvent.description}</p>
+              )}
+              <div className="mb-4">
+                <CountdownTimer targetDate={activeEvent.end_date} />
+              </div>
+              <Link
+                href={`/events/${activeEvent.id}`}
+                className="inline-block bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold px-6 py-3 rounded-lg transition-all duration-300"
+              >
+                Join Event
+              </Link>
+            </div>
+          )}
 
-          {/* Start Playing Button */}
-          <Link
-            href="/login"
-            className="inline-block bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold text-lg px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-          >
-            Start Playing
-          </Link>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/play"
+              className="inline-block bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold text-lg px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            >
+              Play CTF Challenges
+            </Link>
+            <Link
+              href="/login"
+              className="inline-block bg-gray-700 hover:bg-gray-600 text-white font-bold text-lg px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105"
+            >
+              Login / Register
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -52,8 +98,7 @@ export default function Home() {
             <p className="text-gray-300 text-lg leading-relaxed mb-4">
               Capture The Flag (CTF) competitions are cybersecurity challenges where participants 
               solve security-related tasks to find hidden "flags" - strings of text that prove you've 
-              completed a challenge. These competitions are designed to test and improve your skills 
-              in various cybersecurity domains.
+              completed a challenge. Our platform uses the flag format: <code className="bg-gray-700 px-2 py-1 rounded">cvctf{`{...}`}</code>
             </p>
             <p className="text-gray-300 text-lg leading-relaxed mb-4">
               CTF competitions are invaluable for:
@@ -67,8 +112,8 @@ export default function Home() {
             </ul>
             <p className="text-gray-300 text-lg leading-relaxed">
               Whether you're a beginner looking to learn or an experienced professional seeking to 
-              test your skills, this CTF platform offers challenges for all levels. Join us and 
-              become part of the Cyber Vanguard community!
+              test your skills, this CTF platform offers challenges for all levels. Play past challenges 
+              anytime or join active events to compete in real-time!
             </p>
           </div>
         </div>
@@ -96,32 +141,23 @@ export default function Home() {
               </p>
             </div>
             <div className="border-l-4 border-primary-500 pl-4">
-              <h3 className="text-xl font-semibold text-white mb-2">3. No Brute Force Attacks</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">3. Flag Format</h3>
+              <p className="text-gray-300">
+                Flags follow the format: <code className="bg-gray-700 px-2 py-1 rounded">cvctf{`{...}`}</code>
+              </p>
+            </div>
+            <div className="border-l-4 border-primary-500 pl-4">
+              <h3 className="text-xl font-semibold text-white mb-2">4. No Brute Force Attacks</h3>
               <p className="text-gray-300">
                 Do not attempt to brute force flags or attack the platform infrastructure. 
                 Focus on solving the challenges as intended.
               </p>
             </div>
             <div className="border-l-4 border-primary-500 pl-4">
-              <h3 className="text-xl font-semibold text-white mb-2">4. Respect the Platform</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">5. Respect the Platform</h3>
               <p className="text-gray-300">
                 Any attempts to disrupt the platform, attack other participants, or engage in 
-                malicious activities will result in immediate disqualification and potential 
-                legal action.
-              </p>
-            </div>
-            <div className="border-l-4 border-primary-500 pl-4">
-              <h3 className="text-xl font-semibold text-white mb-2">5. Flag Format</h3>
-              <p className="text-gray-300">
-                Flags typically follow the format: <code className="bg-gray-700 px-2 py-1 rounded">CTF{`{...}`}</code> 
-                or as specified in each challenge description.
-              </p>
-            </div>
-            <div className="border-l-4 border-primary-500 pl-4">
-              <h3 className="text-xl font-semibold text-white mb-2">6. Scoring</h3>
-              <p className="text-gray-300">
-                Points are awarded based on challenge difficulty. First blood (first solve) may 
-                receive bonus points. Check the leaderboard to track your progress.
+                malicious activities will result in immediate disqualification.
               </p>
             </div>
           </div>
@@ -135,27 +171,18 @@ export default function Home() {
             Our Sponsors
           </h2>
           <div className="flex flex-wrap justify-center items-center gap-8">
-            {/* Placeholder sponsor logos - replace with actual sponsor logos */}
-            <div className="bg-gray-700 rounded-lg p-8 w-48 h-32 flex items-center justify-center">
-              <p className="text-gray-400 text-sm">Sponsor Logo</p>
-            </div>
-            <div className="bg-gray-700 rounded-lg p-8 w-48 h-32 flex items-center justify-center">
-              <p className="text-gray-400 text-sm">Sponsor Logo</p>
-            </div>
+            {/* Sponsors will be loaded from API */}
             <div className="bg-gray-700 rounded-lg p-8 w-48 h-32 flex items-center justify-center">
               <p className="text-gray-400 text-sm">Sponsor Logo</p>
             </div>
           </div>
-          <p className="text-center text-gray-400 mt-6 text-sm">
-            Interested in sponsoring? Contact us at <a href="mailto:sponsor@example.com" className="text-primary-400 hover:underline">sponsor@example.com</a>
-          </p>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="container mx-auto px-4 py-8 border-t border-gray-700">
         <div className="text-center text-gray-400">
-          <p>© 2025 Cyber Vanguard CTF. Built with ❤️ for the cybersecurity community.</p>
+          <p>© 2025 CyberVanguard CTF Platform. Built with ❤️ for the cybersecurity community.</p>
           <p className="mt-2 text-sm">
             Cyber Vanguard - Cyber Club @AAU
           </p>
@@ -164,4 +191,3 @@ export default function Home() {
     </main>
   )
 }
-

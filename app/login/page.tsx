@@ -23,6 +23,17 @@ export default function LoginPage() {
     }
 
     setIsLoading(true)
+    
+    // Check if admin credentials
+    if (email === 'admin@cybervanguard.com' && password === 'admin123') {
+      // Store admin session
+      localStorage.setItem('ctf_admin', 'true')
+      localStorage.setItem('ctf_admin_email', email)
+      router.push('/admin')
+      setIsLoading(false)
+      return
+    }
+    
     const success = await login(email, password)
     setIsLoading(false)
 
