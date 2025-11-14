@@ -38,6 +38,65 @@ if ($method === 'GET' && $action === 'active') {
     sendResponse(['event' => $event]);
 }
 
+// Get single event
+if ($method === 'GET' && $action === 'get') {
+    $id = $_GET['id'] ?? '';
+    if (!$id) sendError('Event ID required');
+    
+    $pdo = getDB();
+    if (!$pdo) sendError('Database not available');
+    
+    $stmt = $pdo->prepare("SELECT * FROM events WHERE id = ?");
+    $stmt->execute([$id]);
+    $event = $stmt->fetch();
+    
+    if (!$event) sendError('Event not found', 404);
+    
+    sendResponse(['event' => $event]);
+}
+
+// Get event scoreboard
+if ($method === 'GET' && $action === 'scoreboard') {
+    $id = $_GET['id'] ?? '';
+    if (!$id) sendError('Event ID required');
+    
+    $pdo = getDB();
+    if (!$pdo) {
+        sendResponse(['leaderboard' => []]);
+    }
+    
+    // Get users who solved challenges from this event
+    $stmt = $pdo->prepare("
+        SELECT 
+            u.id,
+            u.name,
+            u.email,
+            COALESCE(SUM(c.points), 0) as total_points,
+            COUNT(DISTINCT sf.challenge_id) as challenges_solved
+        FROM users u
+        LEFT JOIN submitted_flags sf ON u.id = sf.user_id AND sf.is_correct = 1
+        LEFT JOIN challenges c ON sf.challenge_id = c.id AND c.event_id = ?
+        GROUP BY u.id, u.name, u.email
+        HAVING challenges_solved > 0 OR total_points > 0
+        ORDER BY total_points DESC, challenges_solved DESC
+    ");
+    $stmt->execute([$id]);
+    $users = $stmt->fetchAll();
+    
+    $leaderboard = [];
+    $rank = 1;
+    foreach ($users as $user) {
+        $leaderboard[] = [
+            'rank' => $rank++,
+            'username' => $user['name'],
+            'points' => (int)$user['total_points'],
+            'solved' => (int)$user['challenges_solved'],
+        ];
+    }
+    
+    sendResponse(['leaderboard' => $leaderboard]);
+}
+
 // Admin: Create event
 if ($method === 'POST' && $action === 'create') {
     requireAdmin();

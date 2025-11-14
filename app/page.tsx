@@ -52,21 +52,32 @@ export default function Home() {
 
           {/* Active Event Section */}
           {!isLoading && activeEvent && (
-            <div className="bg-gray-800/50 rounded-lg p-8 mb-8 border border-primary-500/50">
-              <h2 className="text-2xl font-bold text-white mb-4">🎯 Active Event</h2>
-              <h3 className="text-xl font-semibold text-primary-400 mb-2">{activeEvent.name}</h3>
+            <div className="bg-gray-800/50 rounded-lg p-8 mb-8 border border-primary-500/50 shadow-xl">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <span className="text-3xl">🎯</span>
+                <h2 className="text-2xl font-bold text-white">Active Event</h2>
+              </div>
+              <h3 className="text-xl font-semibold text-primary-400 mb-3">{activeEvent.name}</h3>
               {activeEvent.description && (
-                <p className="text-gray-300 mb-4">{activeEvent.description}</p>
+                <p className="text-gray-300 mb-6">{activeEvent.description}</p>
               )}
-              <div className="mb-4">
+              <div className="mb-6">
                 <CountdownTimer targetDate={activeEvent.end_date} />
               </div>
-              <Link
-                href={`/events/${activeEvent.id}`}
-                className="inline-block bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold px-6 py-3 rounded-lg transition-all duration-300"
-              >
-                Join Event
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href={`/events/${activeEvent.id}`}
+                  className="inline-block bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105"
+                >
+                  View Event
+                </Link>
+                <Link
+                  href={`/events/${activeEvent.id}/play`}
+                  className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105"
+                >
+                  Start Playing
+                </Link>
+              </div>
             </div>
           )}
 
@@ -84,6 +95,38 @@ export default function Home() {
             >
               Login / Register
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-12 text-center">
+            Platform Features
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <div className="text-4xl mb-4">🎮</div>
+              <h3 className="text-xl font-semibold text-white mb-2">General CTF Area</h3>
+              <p className="text-gray-300">
+                Play challenges from past events anytime. Filter by category, difficulty, and event type.
+              </p>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <div className="text-4xl mb-4">🏆</div>
+              <h3 className="text-xl font-semibold text-white mb-2">Live Events</h3>
+              <p className="text-gray-300">
+                Join active CTF events and compete in real-time. View event-specific scoreboards and rankings.
+              </p>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <div className="text-4xl mb-4">📊</div>
+              <h3 className="text-xl font-semibold text-white mb-2">Track Progress</h3>
+              <p className="text-gray-300">
+                Monitor your progress, view solved challenges, and compete on the global leaderboard.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -113,7 +156,7 @@ export default function Home() {
             <p className="text-gray-300 text-lg leading-relaxed">
               Whether you're a beginner looking to learn or an experienced professional seeking to 
               test your skills, this CTF platform offers challenges for all levels. Play past challenges 
-              anytime or join active events to compete in real-time!
+              anytime in the general area or join active events to compete in real-time!
             </p>
           </div>
         </div>
@@ -163,31 +206,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Sponsors Section */}
-      <section className="container mx-auto px-4 py-16 bg-gray-800/30">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-8 text-center">
-            Our Sponsors
-          </h2>
-          <div className="flex flex-wrap justify-center items-center gap-8">
-            {/* Sponsors will be loaded from API */}
-            <div className="bg-gray-700 rounded-lg p-8 w-48 h-32 flex items-center justify-center">
-              <p className="text-gray-400 text-sm">Sponsor Logo</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="container mx-auto px-4 py-8 border-t border-gray-700">
-        <div className="text-center text-gray-400">
-          <p>© 2025 CyberVanguard CTF Platform. Built with ❤️ for the cybersecurity community.</p>
-          <p className="mt-2 text-sm">
-            Cyber Vanguard - Cyber Club @AAU
-          </p>
-        </div>
-      </footer>
     </main>
   )
 }
